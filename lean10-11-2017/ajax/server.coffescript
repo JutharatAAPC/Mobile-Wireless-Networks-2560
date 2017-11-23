@@ -1,0 +1,31 @@
+express = require("express")
+callbacks = []
+
+// function sending messages to clients
+appendMessage = (message) ->
+ resp = messages: [ message ]
+ callbacks.shift() resp  while callbacks.length > 0
+
+// create server on express
+app = module.exports = express.createServer()
+app.use express.bodyParser()
+
+// simply return index.html
+app.get "/", (req, res) ->
+ res.sendfile "index.html"
+
+// process client message
+app.post "/send", (req, res) ->
+ message =
+   nickname: req.param("nickname", "Anonymous")
+   text: req.param("text", "")
+ appendMessage message
+ res.json status: "ok"
+
+// wait for new messages
+app.get "/recv", (req, res) ->
+ callbacks.push (message) ->
+   res.json message
+
+// listen port
+app.listen process.env.PORT
